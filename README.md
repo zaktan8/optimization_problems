@@ -1,1 +1,1 @@
-optimization_problems
+Heuristics implementations for solving some optimization problems

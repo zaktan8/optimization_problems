@@ -171,28 +171,6 @@ class GeneticAlgorithm:
             sol[i], sol[j] = sol[j], sol[i]
             return sol
 
-        def inversion_mutation(solution: Solution) -> Solution:
-            if np.random.sample() >= self.mutation_prob:
-                return solution
-            else:
-                sol = copy.deepcopy(solution)
-                i, j = np.random.choice(len(sol.assignment), 2, replace=False)
-                i, j = min(i, j), max(i, j)
-                sol[i:j] = list(reversed(sol[i:j]))
-                sol.update_cost()
-                return sol
-
-        def scrumble_mutation(solution: Solution) -> Solution:
-            if np.random.sample() >= self.mutation_prob:
-                return solution
-            else:
-                sol = copy.deepcopy(solution)
-                i, j = np.random.choice(len(sol.assignment), 2, replace=False)
-                i, j = min(i, j), max(i, j)
-                sol[i:j] = list(np.random.permutation(sol[i:j]))
-                sol.update_cost()
-                return sol
-
         return np.vectorize(mutation)(population)
 
     def _select_survivors(self, population: np.ndarray) -> np.ndarray:
@@ -232,7 +210,8 @@ class Utils:
 
     @staticmethod
     def evaluate_solution(str_encoding: str, instance: Instance) -> int:
-        sol = Solution(np.array(map(lambda x: int(x) - 1, str_encoding.split())),
+        sol = Solution(np.array(list(map(lambda x: int(x) - 1,
+                                         str_encoding.split()))),
                        instance)
         return sol.cost
 
@@ -283,18 +262,6 @@ class Utils:
 
         best_cost = min(costs)
         print(f"Best solution after tests: {best_cost:_}\n\n")
-
-        fig = plt.figure()
-        plt.title(f"{instance.name:7}\n"
-                  f"best={best_cost:_} "
-                  f"avg={int(np.average(costs)):_} "
-                  f"worst={max(costs):_}")
-        plt.xticks([])
-        plt.ylabel('Solution cost')
-        plt.plot(range(n_tests), sorted(costs))
-        plt.tight_layout()
-        plt.savefig(f"./images/{instance.name}_{n_tests}_tests.png")
-        plt.close(fig)
 
         return best_solution
 

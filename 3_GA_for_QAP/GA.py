@@ -92,6 +92,8 @@ class GeneticAlgorithm:
 
     def solve(self, instance: Instance) -> (Solution, plt.Figure):
         volumes, best_solutions = [], []
+        no_improvements_steps = 0
+        sliding_window_size = int(self.n_epochs * 0.25)
         population = self._generate_population(instance)
         self.best_solution = min(population)
         epoch_counter = tqdm(iterable=range(self.n_epochs),
@@ -107,6 +109,12 @@ class GeneticAlgorithm:
             current_best_solution = min(population)
             if current_best_solution < self.best_solution:
                 self.best_solution = current_best_solution
+                no_improvements_steps = 0
+            else:
+                no_improvements_steps += 1
+                if no_improvements_steps == sliding_window_size:
+                    epoch_counter.close()
+                    break
 
             best_solutions.append(self.best_solution.cost)
             volume = sum(map(lambda s: s.cost, population))
@@ -201,7 +209,7 @@ class GeneticAlgorithm:
                              best_solutions: List[int],
                              volumes: List[int]) -> plt.Figure:
         image, ax1 = plt.subplots()
-        plt.title(f"{self.best_solution.instance.name}: best score = {self.best_solution.cost:_}")
+        plt.title(f"{self.best_solution.instance.name}: best={self.best_solution.cost:_}")
 
         color = 'tab:red'
         ax1.set_xlabel('Epoch')
@@ -241,8 +249,8 @@ class Utils:
 
         for instance in instances:
             print(f"Instance: {instance.name}")
-            n_tests = int(400 / instance.size)
-            n_epochs = 50 * instance.size
+            n_tests = int(1000 / instance.size)
+            n_epochs = 100 * instance.size
             best_sol = Utils.test_n_times(instance,
                                           n_tests,
                                           n_epochs,
@@ -277,8 +285,10 @@ class Utils:
         print(f"Best solution after tests: {best_cost:_}\n\n")
 
         fig = plt.figure()
-        plt.title(f"{instance.name:7} = {best_cost:_}"
-                  f"\nAvg cost = {int(np.average(costs)):_}")
+        plt.title(f"{instance.name:7}\n"
+                  f"best={best_cost:_} "
+                  f"avg={int(np.average(costs)):_} "
+                  f"worst={max(costs):_}")
         plt.xticks([])
         plt.ylabel('Solution cost')
         plt.plot(range(n_tests), sorted(costs))
